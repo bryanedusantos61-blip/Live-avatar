@@ -139,7 +139,9 @@ function next() {
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const lastJoin = {};
 
-function handle(ev) {
+function handle(ev) {  
+  if (ev.type === 'reply') { say(ev.text); return; }
+  if (ev.type === 'chat' && ev.user === 'Teste' && ev.text.includes('?')) { fetch('/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: 'Teste', text: ev.text }) }); return; }
   if (ev.type === 'gift') {
     const q = ev.count > 1 ? ev.count + ' vezes ' : '';
     say(pick([
@@ -157,7 +159,6 @@ function handle(ev) {
   } else if (ev.type === 'chat') {
     const t = ev.text.toLowerCase();
     if (/^(oi|olá|ola|eae|e aí|opa)\b/.test(t)) say(`Oi, ${ev.user}! Tudo bem?`);
-    else if (t.includes('?') && Math.random() < 0.5) say(`${ev.user}, boa pergunta! Já já eu respondo.`);
   }
 }
 if (location.search.includes('teste')) {
