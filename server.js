@@ -5,7 +5,8 @@ const { TikTokLiveConnection } = require('tiktok-live-connector');
 
 const USERNAME = process.env.TIKTOK_USER || 'bryzex7';
 const PORT = process.env.PORT || 3000;
-const KEY = process.env.ANTHROPIC_API_KEY;
+const KEY = process.env.OPENAI_API_KEY;
+const MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
 
 const app = express();
 app.use(express.json());
@@ -27,7 +28,7 @@ const pending = [];
 let working = false;
 
 async function ask(user, text) {
-  if (!KEY) { console.log('Falta ANTHROPIC_API_KEY'); return; }
+  if (!KEY) { console.log('Falta OPENAI_API_KEY'); return; }
   if (pending.length >= 3) return;
   pending.push({ user, text: String(text).slice(0, 300) });
   if (working) return;
@@ -35,28 +36,29 @@ async function ask(user, text) {
   while (pending.length) {
     const q = pending.shift();
     try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'content-type': 'application/json',
-          'x-api-key': KEY,
-          'anthropic-version': '2023-06-01'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + KEY
         },
         body: JSON.stringify({
-          model: 'claude-haiku-5-5',
+          model: MODEL,
           max_tokens: 150,
-          system: SYSTEM,
-          messages: [{ role: 'user', content: q.user + ' perguntou: ' + q.text }]
+          messages: [
+            { role: 'system', content: SYSTEM },
+            { role: 'user', content: q.user + ' perguntou: ' + q.text }
+          ]
         })
       });
       const j = await r.json();
-      const out = j.content && j.content[0] && j.content[0].text;
+      const out = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
       if (out) broadcast({ type: 'reply', user: q.user, text: out.trim() });
-      else console.log('Resposta inesperada da API:', JSON.stringify(j).slice(0, 300));
+      else console.log('Erro da API (' + r.status + '):', JSON.stringify(j).slice(0, 400));
     } catch (e) {
       console.log('Erro na API:', e.message);
     }
-    await new Promise(r => setTimeout(r, 3000));
+    await new Promise(r => setTimeout(r, 1500));
   }
   working = false;
 }
