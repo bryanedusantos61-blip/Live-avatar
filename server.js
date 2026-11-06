@@ -18,7 +18,7 @@ function broadcast(msg) {
 
 let conn;
 function connect() {
-  conn = new TikTokLiveConnection(USERNAME);
+  conn = new TikTokLiveConnection(USERNAME, {});
 
   conn.connect()
     .then(s => console.log('Conectado na live de @' + USERNAME, s.roomId || ''))
