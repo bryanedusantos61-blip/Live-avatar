@@ -5,8 +5,8 @@ const { TikTokLiveConnection } = require('tiktok-live-connector');
 
 const USERNAME = process.env.TIKTOK_USER || 'bryzex7';
 const PORT = process.env.PORT || 3000;
-const KEY = process.env.OPENAI_API_KEY;
-const MODEL = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
+const KEY = process.env.GEMINI_API_KEY;
+const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
 
 const app = express();
 app.use(express.json());
@@ -28,7 +28,7 @@ const pending = [];
 let working = false;
 
 async function ask(user, text) {
-  if (!KEY) { console.log('Falta OPENAI_API_KEY'); return; }
+  if (!KEY) { console.log('Falta GEMINI_API_KEY'); return; }
   if (pending.length >= 3) return;
   pending.push({ user, text: String(text).slice(0, 300) });
   if (working) return;
@@ -36,23 +36,21 @@ async function ask(user, text) {
   while (pending.length) {
     const q = pending.shift();
     try {
-      const r = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + KEY
-        },
-        body: JSON.stringify({
-          model: MODEL,
-          max_tokens: 150,
-          messages: [
-            { role: 'system', content: SYSTEM },
-            { role: 'user', content: q.user + ' perguntou: ' + q.text }
-          ]
-        })
-      });
+      const r = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': KEY },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: SYSTEM }] },
+            contents: [{ role: 'user', parts: [{ text: q.user + ' perguntou: ' + q.text }] }],
+            generationConfig: { maxOutputTokens: 150 }
+          })
+        }
+      );
       const j = await r.json();
-      const out = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+      const out = j.candidates && j.candidates[0] && j.candidates[0].content &&
+        j.candidates[0].content.parts && j.candidates[0].content.parts[0].text;
       if (out) broadcast({ type: 'reply', user: q.user, text: out.trim() });
       else console.log('Erro da API (' + r.status + '):', JSON.stringify(j).slice(0, 400));
     } catch (e) {
