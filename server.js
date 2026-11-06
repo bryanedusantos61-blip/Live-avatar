@@ -3,7 +3,7 @@ const http = require('http');
 const { WebSocketServer } = require('ws');
 const { TikTokLiveConnection } = require('tiktok-live-connector');
 
-const USERNAME = process.env.TIKTOK_USER || 'bryanedu';
+const USERNAME = process.env.TIKTOK_USER || 'bryzex7';
 const PORT = process.env.PORT || 3000;
 
 const app = express();
