@@ -124,7 +124,7 @@ function next() {
   bubble.textContent = text; bubble.style.display = 'block';
   const u = new SpeechSynthesisUtterance(text);
   if (voice) u.voice = voice;
-  u.lang = 'pt-BR'; u.pitch = 1.2; u.rate = 1.05;
+  u.lang = 'pt-BR'; u.pitch = 0.7; u.rate = 1.0;
   u.onstart = () => { speaking = true; };
   const done = () => {
     speaking = false; busy = false;
