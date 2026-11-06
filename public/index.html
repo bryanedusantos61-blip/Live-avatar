@@ -160,8 +160,17 @@ function handle(ev) {
     else if (t.includes('?') && Math.random() < 0.5) say(`${ev.user}, boa pergunta! Já já eu respondo.`);
   }
 }
-
-function connectWS() {
+if (location.search.includes('teste')) {
+  const p = document.createElement('div');
+  p.style.cssText = 'position:fixed;top:8px;left:8px;right:8px;z-index:9;display:flex;gap:6px;flex-wrap:wrap';
+  p.innerHTML = '<input id="ti" placeholder="Digite um comentário" style="flex:1;min-width:140px;padding:10px;font-size:16px;border-radius:10px;border:0"><button id="tc" style="padding:10px">Chat</button><button id="tg" style="padding:10px">Presente</button><button id="tf" style="padding:10px">Follow</button><button id="tj" style="padding:10px">Entrou</button>';
+  document.body.appendChild(p);
+  const $ = id => document.getElementById(id);
+  $('tc').onclick = () => { handle({ type: 'chat', user: 'Teste', text: $('ti').value || 'oi' }); $('ti').value = ''; };
+  $('tg').onclick = () => handle({ type: 'gift', user: 'Teste', gift: 'Rosa', count: 1 });
+  $('tf').onclick = () => handle({ type: 'follow', user: 'Teste' });
+  $('tj').onclick = () => handle({ type: 'join', user: 'Teste' });
+} function connectWS() {
   const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
   ws.onmessage = e => handle(JSON.parse(e.data));
   ws.onclose = () => setTimeout(connectWS, 3000);
